@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\CompanyRole;
+use App\Models\Company;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -34,6 +36,19 @@ class UserFactory extends Factory
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
         ];
+    }
+
+    /**
+     * Attach the user to a company (a new one by default) and make it the current company.
+     */
+    public function withCompany(?Company $company = null, CompanyRole $role = CompanyRole::Owner, bool $active = true): static
+    {
+        return $this->afterCreating(function (User $user) use ($company, $role, $active) {
+            $company ??= Company::factory()->create();
+
+            $user->companies()->attach($company, ['role' => $role, 'is_active' => $active]);
+            $user->forceFill(['current_company_id' => $company->id])->save();
+        });
     }
 
     /**
