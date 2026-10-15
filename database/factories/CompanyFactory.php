@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\Niche;
 use App\Models\Company;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -30,7 +31,7 @@ class CompanyFactory extends Factory
             'district' => fake()->word(),
             'city' => fake()->city(),
             'state' => fake()->randomElement(['SP', 'RJ', 'MG', 'RS', 'PR', 'SC', 'BA']),
-            'niche' => 'generic',
+            'niche' => Niche::Generic,
             'settings' => [],
         ];
     }

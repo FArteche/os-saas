@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('legal_name')->nullable();
-            $table->string('document', 14)->nullable(); // CPF (11) ou CNPJ (14), somente dígitos
+            $table->string('document', 14)->nullable(); // CPF (11) ou CNPJ (14, pode ser alfanumérico), sem máscara
             $table->string('email')->nullable();
             $table->string('phone', 20)->nullable();
 

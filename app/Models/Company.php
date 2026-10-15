@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Niche;
 use Database\Factories\CompanyFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,7 +24,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $district
  * @property string|null $city
  * @property string|null $state
- * @property string $niche
+ * @property Niche $niche
  * @property array<string, mixed> $settings
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -47,6 +48,7 @@ class Company extends Model
     protected function casts(): array
     {
         return [
+            'niche' => Niche::class,
             'settings' => 'array',
         ];
     }
