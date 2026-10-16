@@ -38,16 +38,28 @@ it('only considers active memberships as belonging to the company', function () 
         ->and($stranger->roleIn($company))->toBeNull();
 });
 
-it('removes memberships but keeps users when a company is deleted', function () {
+it('removes memberships but keeps users when a company is permanently deleted', function () {
+    $user = User::factory()->withCompany()->create();
+    $company = $user->currentCompany;
+
+    $company->forceDelete();
+    $user->refresh();
+
+    expect($user->exists)->toBeTrue()
+        ->and($user->current_company_id)->toBeNull()
+        ->and($user->companies)->toBeEmpty();
+});
+
+it('hides a deactivated company from its members', function () {
     $user = User::factory()->withCompany()->create();
     $company = $user->currentCompany;
 
     $company->delete();
     $user->refresh();
 
-    expect($user->exists)->toBeTrue()
-        ->and($user->current_company_id)->toBeNull()
-        ->and($user->companies)->toBeEmpty();
+    expect($user->currentCompany)->toBeNull()
+        ->and($user->companies)->toBeEmpty()
+        ->and($user->belongsToCompany($company))->toBeFalse();
 });
 
 it('does not allow mass assigning the current company', function () {

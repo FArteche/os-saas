@@ -23,14 +23,16 @@ export default function DeleteUser() {
         <div className="space-y-6">
             <Heading
                 variant="small"
-                title="Excluir conta"
-                description="Exclua sua conta e todos os seus dados"
+                title="Desativar conta"
+                description="Encerre seu acesso ao sistema"
             />
             <div className="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10">
                 <div className="relative space-y-0.5 text-red-600 dark:text-red-100">
                     <p className="font-medium">Atenção</p>
                     <p className="text-sm">
-                        Prossiga com cuidado: esta ação não pode ser desfeita.
+                        Você perderá o acesso a todas as empresas. Para voltar a
+                        usar o sistema, será preciso entrar em contato com o
+                        suporte.
                     </p>
                 </div>
 
@@ -40,17 +42,27 @@ export default function DeleteUser() {
                             variant="destructive"
                             data-test="delete-user-button"
                         >
-                            Excluir conta
+                            Desativar conta
                         </Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogTitle>
-                            Tem certeza de que deseja excluir sua conta?
+                            Tem certeza de que deseja desativar sua conta?
                         </DialogTitle>
-                        <DialogDescription>
-                            Ao excluir sua conta, todos os seus dados serão
-                            apagados permanentemente. Digite sua senha para
-                            confirmar.
+                        <DialogDescription asChild>
+                            <div className="space-y-2">
+                                <p>
+                                    O histórico das empresas (clientes e ordens
+                                    de serviço) é mantido.
+                                </p>
+                                <p>
+                                    Nas empresas em que você é o único
+                                    proprietário, o membro mais antigo passa a
+                                    ser o proprietário. Se não houver outros
+                                    membros, a empresa também é desativada.
+                                </p>
+                                <p>Digite sua senha para confirmar.</p>
+                            </div>
                         </DialogDescription>
 
                         <Form
@@ -104,7 +116,7 @@ export default function DeleteUser() {
                                                 type="submit"
                                                 data-test="confirm-delete-user-button"
                                             >
-                                                Excluir conta
+                                                Desativar conta
                                             </button>
                                         </Button>
                                     </DialogFooter>
