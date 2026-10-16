@@ -1,4 +1,5 @@
 import type { Auth } from '@/types/auth';
+import type { CompanyOption, CurrentCompany } from '@/types/company';
 
 declare module 'react' {
     interface InputHTMLAttributes<T> {
@@ -12,6 +13,8 @@ declare module '@inertiajs/core' {
             name: string;
             auth: Auth;
             sidebarOpen: boolean;
+            currentCompany: CurrentCompany | null;
+            companies: CompanyOption[];
             [key: string]: unknown;
         };
     }

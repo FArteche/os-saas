@@ -2,6 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Company;
+use App\Models\User;
+use App\Tenancy\CurrentCompany;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -42,6 +45,51 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'currentCompany' => fn () => $this->currentCompany($request),
+            'companies' => fn () => $this->companies($request),
         ];
+    }
+
+    /**
+     * @return array{id: int, name: string, role: string|null, roleLabel: string|null}|null
+     */
+    private function currentCompany(Request $request): ?array
+    {
+        $company = app(CurrentCompany::class)->get();
+        $user = $request->user();
+
+        if (! $company || ! $user instanceof User) {
+            return null;
+        }
+
+        $role = $user->roleIn($company);
+
+        return [
+            'id' => $company->id,
+            'name' => $company->name,
+            'role' => $role?->value,
+            'roleLabel' => $role?->label(),
+        ];
+    }
+
+    /**
+     * The companies the user can switch to.
+     *
+     * @return list<array{id: int, name: string}>
+     */
+    private function companies(Request $request): array
+    {
+        $user = $request->user();
+
+        if (! $user instanceof User) {
+            return [];
+        }
+
+        return array_values($user->companies()
+            ->wherePivot('is_active', true)
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Company $company) => ['id' => $company->id, 'name' => $company->name])
+            ->all());
     }
 }
