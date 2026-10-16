@@ -4,12 +4,35 @@ use App\Enums\CompanyRole;
 use App\Models\Company;
 use App\Models\User;
 use App\Tenancy\CurrentCompany;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 beforeEach(function () {
     Route::middleware('web')->get('/_test/current-company', fn (CurrentCompany $current) => [
         'company_id' => $current->id(),
+        'role' => $current->role()?->value,
     ]);
+});
+
+it('exposes the membership role without extra queries', function () {
+    $user = User::factory()->withCompany(role: CompanyRole::Attendant)->create();
+
+    $this->actingAs($user)->get('/_test/current-company')
+        ->assertJson(['company_id' => $user->current_company_id, 'role' => 'attendant']);
+});
+
+it('resolves the company, its membership and the switcher list in at most 2 queries', function () {
+    $user = User::factory()->withCompany()->create();
+    $user->companies()->attach(Company::factory()->create(), ['role' => CompanyRole::Technician]);
+
+    DB::enableQueryLog();
+    $this->actingAs($user)->get(route('dashboard'))->assertOk();
+
+    $companyQueries = collect(DB::getQueryLog())
+        ->pluck('query')
+        ->filter(fn (string $sql) => str_contains($sql, 'companies'));
+
+    expect($companyQueries)->toHaveCount(2);
 });
 
 it('uses the current company of an active member', function () {

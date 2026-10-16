@@ -8,7 +8,9 @@ Route::inertia('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('onboarding', [OnboardingController::class, 'create'])->name('onboarding.create');
-    Route::post('onboarding', [OnboardingController::class, 'store'])->name('onboarding.store');
+    Route::post('onboarding', [OnboardingController::class, 'store'])
+        ->middleware('throttle:company-creation')
+        ->name('onboarding.store');
 
     Route::put('current-company', [CurrentCompanyController::class, 'update'])->name('current-company.update');
 

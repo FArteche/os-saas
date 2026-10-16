@@ -3,7 +3,9 @@
 namespace App\Http\Requests;
 
 use App\Enums\Niche;
+use App\Rules\BrazilianPhone;
 use App\Rules\CpfOrCnpj;
+use App\Support\Phone;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -15,9 +17,11 @@ class StoreCompanyRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
+        $phone = $this->input('phone');
+
         $this->merge([
             'document' => $this->unmask('document', '/[^0-9A-Za-z]/', uppercase: true),
-            'phone' => $this->unmask('phone', '/\D/'),
+            'phone' => is_string($phone) ? Phone::normalize($phone) : null,
         ]);
     }
 
@@ -29,7 +33,7 @@ class StoreCompanyRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'document' => ['nullable', 'string', new CpfOrCnpj],
-            'phone' => ['nullable', 'string', 'between:10,11'],
+            'phone' => ['nullable', 'string', new BrazilianPhone],
             'niche' => ['required', Rule::enum(Niche::class)],
         ];
     }
@@ -55,7 +59,6 @@ class StoreCompanyRequest extends FormRequest
         return [
             'required' => 'Informe o :attribute.',
             'max' => 'O :attribute deve ter no máximo :max caracteres.',
-            'phone.between' => 'Informe o telefone com DDD (10 ou 11 dígitos).',
             'niche.enum' => 'Escolha um ramo de atuação válido.',
         ];
     }

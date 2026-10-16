@@ -45,7 +45,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
-            'currentCompany' => fn () => $this->currentCompany($request),
+            'currentCompany' => fn () => $this->currentCompany(),
             'companies' => fn () => $this->companies($request),
         ];
     }
@@ -53,16 +53,16 @@ class HandleInertiaRequests extends Middleware
     /**
      * @return array{id: int, name: string, role: string|null, roleLabel: string|null}|null
      */
-    private function currentCompany(Request $request): ?array
+    private function currentCompany(): ?array
     {
-        $company = app(CurrentCompany::class)->get();
-        $user = $request->user();
+        $current = app(CurrentCompany::class);
+        $company = $current->get();
 
-        if (! $company || ! $user instanceof User) {
+        if (! $company) {
             return null;
         }
 
-        $role = $user->roleIn($company);
+        $role = $current->role();
 
         return [
             'id' => $company->id,

@@ -18,9 +18,14 @@ class OnboardingController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        $hasActiveCompany = $user->companies()->wherePivot('is_active', true)->exists();
+
         return Inertia::render('onboarding', [
             'niches' => Niche::options(),
-            'isFirstCompany' => ! $user->companies()->exists(),
+            // Without an active company there is no dashboard to go back to.
+            'isFirstCompany' => ! $hasActiveCompany,
+            // Was removed from every company they belonged to (e.g. a technician who left).
+            'lostAccess' => ! $hasActiveCompany && $user->companies()->exists(),
         ]);
     }
 

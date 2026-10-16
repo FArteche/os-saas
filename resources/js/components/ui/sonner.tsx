@@ -1,9 +1,11 @@
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import { useAppearance } from '@/hooks/use-appearance';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Toaster as Sonner, type ToasterProps } from 'sonner';
 
 function Toaster({ ...props }: ToasterProps) {
     const { appearance } = useAppearance();
+    const isMobile = useIsMobile();
 
     useFlashToast();
 
@@ -11,7 +13,8 @@ function Toaster({ ...props }: ToasterProps) {
         <Sonner
             theme={appearance}
             className="toaster group"
-            position="bottom-right"
+            // On phones the bottom of the screen holds the user menu; keep toasts out of the way.
+            position={isMobile ? 'top-center' : 'bottom-right'}
             style={
                 {
                     '--normal-bg': 'var(--popover)',

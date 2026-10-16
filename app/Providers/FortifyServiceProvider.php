@@ -13,6 +13,8 @@ use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
+use Laravel\Passkeys\Contracts\PasskeyUser;
+use Laravel\Passkeys\Passkeys;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -32,6 +34,16 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
+        $this->configurePasskeys();
+    }
+
+    /**
+     * A passkey whose owner is gone (deactivated accounts are soft deleted, so the
+     * relation resolves to null) must fail with a friendly error instead of a 500.
+     */
+    private function configurePasskeys(): void
+    {
+        Passkeys::authorizeLoginUsing(fn (Request $request, ?PasskeyUser $user) => $user !== null);
     }
 
     /**

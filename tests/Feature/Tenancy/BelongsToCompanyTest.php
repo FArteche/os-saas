@@ -49,3 +49,40 @@ it('fills company_id from the current company on create', function () {
 it('refuses to create a row without any company', function () {
     Note::create(['body' => 'orphan']);
 })->throws(LogicException::class);
+
+it('refuses a forged company_id while working on another company', function () {
+    app(CurrentCompany::class)->set($this->shopA);
+
+    // e.g. Note::create($request->all()) with a company_id injected into the form
+    expect(fn () => Note::create(['company_id' => $this->shopB->id, 'body' => 'forged']))
+        ->toThrow(LogicException::class);
+
+    expect(Note::withoutCompanyScope()->where('body', 'forged')->exists())->toBeFalse();
+});
+
+it('accepts an explicit company_id equal to the current company', function () {
+    app(CurrentCompany::class)->set($this->shopA);
+
+    $note = Note::create(['company_id' => (string) $this->shopA->id, 'body' => 'same']);
+
+    expect($note->company_id)->toBe($this->shopA->id);
+});
+
+it('does not allow moving a row to another company', function () {
+    app(CurrentCompany::class)->set($this->shopA);
+    $note = Note::create(['body' => 'mine']);
+
+    expect(fn () => $note->update(['company_id' => $this->shopB->id]))
+        ->toThrow(LogicException::class);
+
+    expect(Note::withoutCompanyScope()->find($note->id)->company_id)->toBe($this->shopA->id);
+});
+
+it('still allows regular updates of company rows', function () {
+    app(CurrentCompany::class)->set($this->shopA);
+    $note = Note::create(['body' => 'before']);
+
+    $note->update(['body' => 'after']);
+
+    expect($note->fresh()->body)->toBe('after');
+});

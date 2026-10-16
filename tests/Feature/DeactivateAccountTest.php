@@ -4,6 +4,57 @@ use App\Actions\Users\DeactivateAccount;
 use App\Enums\CompanyRole;
 use App\Models\Company;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Laravel\Passkeys\Passkey;
+use Laravel\Passkeys\Passkeys;
+
+function addPasskey(User $user): Passkey
+{
+    /** @var Passkey */
+    return $user->passkeys()->create([
+        'name' => 'Celular',
+        'credential_id' => fake()->uuid(),
+        'credential' => ['public_key' => 'test'],
+    ]);
+}
+
+it('deletes the passkeys of a deactivated account', function () {
+    $user = User::factory()->withCompany()->create();
+    addPasskey($user);
+
+    app(DeactivateAccount::class)->handle($user);
+
+    expect(Passkey::where('user_id', $user->id)->exists())->toBeFalse();
+});
+
+it('refuses passkey login for an account deactivated before passkeys were cleaned up', function () {
+    $user = User::factory()->withCompany()->create();
+    $passkey = addPasskey($user);
+    $user->delete(); // soft delete without the action: simulates leftover data
+
+    expect(Passkeys::allowsLogin(Request::create('/'), $passkey->fresh()))->toBeFalse();
+});
+
+it('still allows passkey login for active accounts', function () {
+    $user = User::factory()->withCompany()->create();
+    $passkey = addPasskey($user);
+
+    expect(Passkeys::allowsLogin(Request::create('/'), $passkey))->toBeTrue();
+});
+
+it('locks the owned companies so concurrent owner deactivations run one at a time', function () {
+    $user = User::factory()->withCompany()->create();
+
+    DB::enableQueryLog();
+    app(DeactivateAccount::class)->handle($user);
+
+    $locking = collect(DB::getQueryLog())
+        ->pluck('query')
+        ->filter(fn (string $sql) => str_contains($sql, '"companies"') && str_contains($sql, 'for update'));
+
+    expect($locking)->toHaveCount(1);
+});
 
 /**
  * Adds $user to $company, $daysAgo days in the past (so "oldest member" is deterministic).

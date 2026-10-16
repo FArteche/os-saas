@@ -43,6 +43,16 @@ class Company extends Model
     use HasFactory, SoftDeletes;
 
     /**
+     * Defaults mirrored from the migration, so a freshly created model has them in memory.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'niche' => 'generic',
+        'settings' => '{}',
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

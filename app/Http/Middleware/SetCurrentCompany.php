@@ -27,22 +27,31 @@ class SetCurrentCompany
         $user = $request->user();
 
         if ($user instanceof User && ($company = $this->resolveCompany($user))) {
-            $this->currentCompany->set($company);
+            $this->currentCompany->set($company, $company->membership);
         }
 
         return $next($request);
     }
 
+    /**
+     * Loads the company through the user's active memberships, so a single query
+     * both checks access and brings the membership (role) along.
+     */
     private function resolveCompany(User $user): ?Company
     {
-        $current = $user->currentCompany;
+        $activeCompanies = fn () => $user->companies()->wherePivot('is_active', true);
 
-        if ($current && $user->belongsToCompany($current)) {
-            return $current;
+        if ($user->current_company_id !== null) {
+            /** @var Company|null $current */
+            $current = $activeCompanies()->find($user->current_company_id);
+
+            if ($current) {
+                return $current;
+            }
         }
 
-        $fallback = $user->companies()
-            ->wherePivot('is_active', true)
+        /** @var Company|null $fallback */
+        $fallback = $activeCompanies()
             ->oldest('company_user.created_at')
             ->first();
 

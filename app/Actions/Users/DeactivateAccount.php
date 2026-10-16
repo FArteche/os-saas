@@ -19,16 +19,23 @@ class DeactivateAccount
     public function handle(User $user): void
     {
         DB::transaction(function () use ($user) {
-            $ownedCompanies = $user->companies()
+            $ownedIds = $user->companies()
                 ->wherePivot('role', CompanyRole::Owner)
                 ->wherePivot('is_active', true)
-                ->get();
+                ->pluck('companies.id');
+
+            // Lock the owned companies (always in id order, to avoid deadlocks) so two
+            // owners leaving at the same time are handled one after the other.
+            $ownedCompanies = Company::whereKey($ownedIds)->orderBy('id')->lockForUpdate()->get();
 
             foreach ($ownedCompanies as $company) {
                 $this->handOver($company, $user);
             }
 
             $user->companies()->newPivotQuery()->update(['is_active' => false]);
+
+            // Passkeys are credentials, not history: an account that cannot log in keeps none.
+            $user->passkeys()->delete();
 
             $user->delete();
         });

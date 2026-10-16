@@ -1,7 +1,9 @@
 import { Form, Head, Link } from '@inertiajs/react';
+import { Info } from 'lucide-react';
 import { useState } from 'react';
 import OnboardingController from '@/actions/App/Http/Controllers/OnboardingController';
 import InputError from '@/components/input-error';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,9 +20,14 @@ type NicheOption = {
 type Props = {
     niches: NicheOption[];
     isFirstCompany: boolean;
+    lostAccess: boolean;
 };
 
-export default function Onboarding({ niches, isFirstCompany }: Props) {
+export default function Onboarding({
+    niches,
+    isFirstCompany,
+    lostAccess,
+}: Props) {
     // Controlled inputs: the mask is re-applied on every keystroke.
     const [document, setDocument] = useState('');
     const [phone, setPhone] = useState('');
@@ -30,6 +37,20 @@ export default function Onboarding({ niches, isFirstCompany }: Props) {
             <Head
                 title={isFirstCompany ? 'Crie sua empresa' : 'Nova empresa'}
             />
+
+            {lostAccess && (
+                <Alert className="mb-6">
+                    <Info />
+                    <AlertTitle>
+                        Você não tem acesso a nenhuma empresa
+                    </AlertTitle>
+                    <AlertDescription>
+                        Seu acesso às empresas em que você trabalhava foi
+                        desativado. Peça a um proprietário para reativá-lo ou
+                        crie sua própria empresa abaixo.
+                    </AlertDescription>
+                </Alert>
+            )}
 
             <Form
                 {...OnboardingController.store.form()}
@@ -157,9 +178,17 @@ export default function Onboarding({ niches, isFirstCompany }: Props) {
     );
 }
 
+const layoutDescription = (props: Props): string => {
+    if (props.lostAccess) {
+        return 'Para continuar usando o sistema, crie a sua própria empresa.';
+    }
+
+    return props.isFirstCompany
+        ? 'Falta pouco! Conte um pouco sobre o seu negócio para começar.'
+        : 'Cadastre outra empresa para gerenciar no mesmo login.';
+};
+
 Onboarding.layout = (props: Props) => ({
     title: props.isFirstCompany ? 'Crie sua empresa' : 'Nova empresa',
-    description: props.isFirstCompany
-        ? 'Falta pouco! Conte um pouco sobre o seu negócio para começar.'
-        : 'Cadastre outra empresa para gerenciar no mesmo login.',
+    description: layoutDescription(props),
 });

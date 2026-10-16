@@ -23,7 +23,7 @@ import { create as createCompany } from '@/routes/onboarding';
 
 export function CompanySwitcher() {
     const { currentCompany, companies } = usePage().props;
-    const { state } = useSidebar();
+    const { state, setOpenMobile } = useSidebar();
     const isMobile = useIsMobile();
     const getInitials = useInitials();
 
@@ -47,9 +47,12 @@ export function CompanySwitcher() {
             return;
         }
 
-        router.put(CurrentCompanyController.update.url(), {
-            company_id: companyId,
-        });
+        router.put(
+            CurrentCompanyController.update.url(),
+            { company_id: companyId },
+            // On phones the sidebar is a drawer: close it so the new company's page is visible.
+            { onSuccess: () => setOpenMobile(false) },
+        );
     };
 
     return (

@@ -25,9 +25,19 @@ export function maskDocument(value: string): string {
         .replace(/(\w{4})(\w)/, '$1-$2');
 }
 
-/** (00) 0000-0000 or (00) 00000-0000. */
+/**
+ * (00) 0000-0000 or (00) 00000-0000.
+ * Drops the +55 country code of numbers pasted from WhatsApp ("+55 11 98765-4321").
+ * "55" is also a valid DDD, so it is only dropped when there are more than 11 digits.
+ */
 export function maskPhone(value: string): string {
-    const digits = value.replace(/\D/g, '').slice(0, 11);
+    let digits = value.replace(/\D/g, '');
+
+    if (digits.length > 11 && digits.startsWith('55')) {
+        digits = digits.slice(2);
+    }
+
+    digits = digits.slice(0, 11);
 
     if (digits.length <= 2) {
         return digits.replace(/^(\d+)/, '($1');
