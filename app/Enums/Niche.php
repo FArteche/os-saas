@@ -2,11 +2,28 @@
 
 namespace App\Enums;
 
+use App\Niches\AutoRepairPreset;
+use App\Niches\CellphonePreset;
+use App\Niches\GenericPreset;
+use App\Niches\NichePreset;
+
 enum Niche: string
 {
     case Generic = 'generic';
     case Cellphone = 'cellphone';
     case AutoRepair = 'auto_repair';
+
+    /**
+     * The starting configuration (equipment types, settings) for this niche.
+     */
+    public function preset(): NichePreset
+    {
+        return match ($this) {
+            self::Generic => new GenericPreset,
+            self::Cellphone => new CellphonePreset,
+            self::AutoRepair => new AutoRepairPreset,
+        };
+    }
 
     public function label(): string
     {

@@ -106,12 +106,12 @@ it('accepts phones typed or pasted in common formats', function (string $typed, 
     'DDD 55 (Santa Maria/RS)' => ['(55) 99876-5432', '55998765432'],
 ]);
 
-it('keeps default settings on the company returned by CreateCompany', function () {
+it('has the preset settings in memory on the company returned by CreateCompany', function () {
     $user = User::factory()->create();
 
     $company = app(CreateCompany::class)->handle($user, ['name' => 'Loja', 'niche' => 'generic']);
 
-    expect($company->settings)->toBe([]);
+    expect($company->settings)->toBe(['warranty_days' => 90]);
 });
 
 it('limits company creation to 10 per hour per user', function () {

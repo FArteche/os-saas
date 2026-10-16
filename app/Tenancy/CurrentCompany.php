@@ -57,4 +57,28 @@ class CurrentCompany
     {
         return $this->membership?->role;
     }
+
+    /**
+     * Run a callback as if the given company were the current one, then restore
+     * the previous state (even if the callback throws). Used when code legitimately
+     * writes into a company other than the request's, e.g. seeding a new company.
+     *
+     * @template TReturn
+     *
+     * @param  callable(): TReturn  $callback
+     * @return TReturn
+     */
+    public function actingAs(Company $company, callable $callback): mixed
+    {
+        [$previousCompany, $previousMembership] = [$this->company, $this->membership];
+
+        $this->set($company);
+
+        try {
+            return $callback();
+        } finally {
+            $this->company = $previousCompany;
+            $this->membership = $previousMembership;
+        }
+    }
 }
